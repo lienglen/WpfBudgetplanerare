@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using WpfBudgetplanerare.Command;
 using WpfBudgetplanerare.Models;
+using WpfBudgetplanerare.Models.Enums;
 
 namespace WpfBudgetplanerare.ViewModels
 {
@@ -35,31 +30,44 @@ namespace WpfBudgetplanerare.ViewModels
             }
         }
 
+        //Property för att välja månad i kalendern
+        private DateTime selectedMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        public DateTime SelectedMonth
+        {
+            get { return selectedMonth; }
+            set 
+            { 
+                selectedMonth = value;
+                RaisePropertyChanged(nameof(SelectedMonth));
+
+                //Uppdaterar prognosen när månaden ändras
+                CalculateMonthlyBalance(SelectedMonth);
+            }
+        }
+
         //Property för att bilda kommandot för att lägga till en inkomst
         public DelegateCommand AddIncomeCommand { get; }
         public DelegateCommand RemoveIncomeCommand { get; }
 
         public MainViewModel() 
         {
-            Incomes.Add(new Income { Amount = 5000, Category = new Category { Id = 1, Name = "Lön", Description = "Månadslön" }, IsRecurring = true, ReceivedDate = DateTime.Now });
-            Incomes.Add(new Income { Amount = 200, Category = new Category { Id = 2, Name = "Gåva", Description = "Födelsedagspresent" }, IsRecurring = false, ReceivedDate = DateTime.Now });
-            Incomes.Add(new Income { Amount = 150, Category = new Category { Id = 3, Name = "Sälj", Description = "Sålde gamla möbler" }, IsRecurring = false, ReceivedDate = DateTime.Now });
+            Incomes.Add(new Income { Amount = 5000, Category = new Category { Id = 1, Name = "Lön", Description = "Månadslön" }, RecurrenceType = Recurrence.Monthly, ReceivedDate = DateTime.Now });
+            Incomes.Add(new Income { Amount = 200, Category = new Category { Id = 2, Name = "Gåva", Description = "Födelsedagspresent" }, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
+            Incomes.Add(new Income { Amount = 150, Category = new Category { Id = 3, Name = "Sälj", Description = "Sålde gamla möbler" }, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
 
-            Expenses.Add(new Expense { Amount = 3000, Category = new Category { Id = 1, Name = "Hyra", Description = "Månadshyra" }, IsRecurring = true, ExpenseDate = DateTime.Now });
-            Expenses.Add(new Expense { Amount = 500, Category = new Category { Id = 2, Name = "Mat", Description = "Veckohandling" }, IsRecurring = false, ExpenseDate = DateTime.Now });
-            Expenses.Add(new Expense { Amount = 200, Category = new Category { Id = 3, Name = "Transport", Description = "Busskort" }, IsRecurring = false, ExpenseDate = DateTime.Now });
+            Expenses.Add(new Expense { Amount = 3000, Category = new Category { Id = 1, Name = "Hyra", Description = "Månadshyra" }, RecurrenceType = Recurrence.Monthly, ExpenseDate = DateTime.Now });
+            Expenses.Add(new Expense { Amount = 500, Category = new Category { Id = 2, Name = "Mat", Description = "Veckohandling" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
+            Expenses.Add(new Expense { Amount = 200, Category = new Category { Id = 3, Name = "Transport", Description = "Busskort" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
 
-            CalculateTotalIncome();
-            CalculateTotalExpense();
-            CalculateMonthlyBalance();
+            CalculateTotalIncomePerMonth(SelectedMonth);
+            CalculateTotalExpensePerMonth(SelectedMonth);
+            CalculateMonthlyBalance(SelectedMonth);
 
             AddIncomeCommand = new DelegateCommand(AddIncome);
             RemoveIncomeCommand = new DelegateCommand(RemoveIncome, CanRemove);
 
             AddExpenseCommand = new DelegateCommand(AddExpense);
             RemoveExpenseCommand = new DelegateCommand(RemoveExpense, CanRemoveExpense);
-
-            
         }
 
         private bool CanRemove(object parameter) => SelectedIncome is not null;
@@ -72,21 +80,18 @@ namespace WpfBudgetplanerare.ViewModels
                 Incomes.Remove(SelectedIncome);
             }
 
-            CalculateTotalIncome();
-            CalculateMonthlyBalance();
+            CalculateTotalIncomePerMonth(SelectedMonth);
+            CalculateMonthlyBalance(SelectedMonth);
         }
-
-
-       
 
         //Metod med logik för att lägga till en inkomst som kallas på från View vid click event
         private void AddIncome(object? parameter)
         {
-            Income income = new Income { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori", Description = "" }, IsRecurring = false, ReceivedDate = System.DateTime.Now };
+            Income income = new Income { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori", Description = "" }, RecurrenceType = Recurrence.OneTime, ReceivedDate = System.DateTime.Now };
             Incomes.Add(income);
             SelectedIncome = income;
-            CalculateTotalIncome();
-            CalculateMonthlyBalance();
+            CalculateTotalIncomePerMonth(SelectedMonth);
+            CalculateMonthlyBalance(SelectedMonth);
 
         }
 
@@ -118,11 +123,11 @@ namespace WpfBudgetplanerare.ViewModels
 
         public void AddExpense(object? parameter)
         {
-            Expense expense = new Expense { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori", Description = "" }, IsRecurring = false, ExpenseDate = System.DateTime.Now };
+            Expense expense = new Expense { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori", Description = "" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = System.DateTime.Now };
             Expenses.Add(expense);
             SelectedExpense = expense;
-            CalculateTotalExpense();
-            CalculateMonthlyBalance();
+            CalculateTotalExpensePerMonth(SelectedMonth);
+            CalculateMonthlyBalance(SelectedMonth);
         }
 
         private bool CanRemoveExpense(object parameter) => SelectedExpense is not null;
@@ -134,8 +139,8 @@ namespace WpfBudgetplanerare.ViewModels
             {
                 Expenses.Remove(SelectedExpense);
             }
-            CalculateTotalExpense();
-            CalculateMonthlyBalance();
+            CalculateTotalExpensePerMonth(SelectedMonth);
+            CalculateMonthlyBalance(SelectedMonth);
         }
 
         //CATEGORIES
@@ -178,39 +183,77 @@ namespace WpfBudgetplanerare.ViewModels
             } 
         }
 
-        public void CalculateTotalIncome()
+        public void CalculateTotalIncomePerMonth(DateTime month)
         {
             TotalIncome = 0;
 
             foreach (var income in Incomes)
             {
-                if (income.IsRecurring == true)
+                switch (income.RecurrenceType)
                 {
-                    TotalIncome += income.Amount;
+                    case Recurrence.OneTime:
+                        if (income.ReceivedDate.Month == month.Month && income.ReceivedDate.Year == month.Year)
+                        {
+                            TotalIncome += income.Amount;
+                        }
+                        break;
+                    case Recurrence.Monthly:
+                        if (income.ReceivedDate <= new DateTime(month.Year, month.Month, 1))
+                        {
+                            TotalIncome += income.Amount;
+                        }
+                        break;
+                    case Recurrence.Yearly:
+                        if (income.ReceivedDate.Month == month.Month && income.ReceivedDate.Year <= month.Year)
+                        {
+                            TotalIncome += income.Amount;
+                        }
+                        break;
                 }
-               
+
             }
 
             RaisePropertyChanged(nameof(TotalIncome));
         }
 
-        public void CalculateTotalExpense()
+        public void CalculateTotalExpensePerMonth(DateTime month)
         {
             TotalExpense = 0;
             foreach (var expense in Expenses)
             {
-                TotalExpense += expense.Amount;
+                switch (expense.RecurrenceType)
+                {
+                    case Recurrence.OneTime:
+                        if (expense.ExpenseDate.Month == month.Month && expense.ExpenseDate.Year == month.Year)
+                        {
+                            TotalExpense += expense.Amount;
+                        }
+                        break;
+                    case Recurrence.Monthly:
+                        if (expense.ExpenseDate <= new DateTime(month.Year, month.Month, 1))
+                        {
+                            TotalExpense += expense.Amount;
+                        }
+                        break;
+                    case Recurrence.Yearly:
+                        if (expense.ExpenseDate.Month == month.Month && expense.ExpenseDate.Year <= month.Year)
+                        {
+                            TotalExpense += expense.Amount;
+                        }
+                        break;
+                }
             }
+
             RaisePropertyChanged(nameof(TotalExpense));
         }
 
-        public void CalculateMonthlyBalance()
+        public void CalculateMonthlyBalance(DateTime month)
         {
+            CalculateTotalIncomePerMonth(month);
+            CalculateTotalExpensePerMonth(month);
             MonthlyBalance = TotalIncome - TotalExpense;
             RaisePropertyChanged(nameof(MonthlyBalance));
         }
-
-        //Filtrera på datum och "isReacurring"
 
 
 
@@ -221,9 +264,6 @@ namespace WpfBudgetplanerare.ViewModels
                 return;
             }
 
-            //var incomes = await 
-            //foreach income in incomes
-            //incoms.Add(income);
 
         }
     }

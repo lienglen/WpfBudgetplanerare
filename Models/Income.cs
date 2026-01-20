@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WpfBudgetplanerare.Models.Enums;
 
 namespace WpfBudgetplanerare.Models
 {
@@ -10,7 +11,7 @@ namespace WpfBudgetplanerare.Models
     {
         public decimal Amount { get; set; }
         public Category Category  { get; set; }
-        public bool IsRecurring { get; set; }
+        public Recurrence RecurrenceType { get; set; }
         public DateTime ReceivedDate { get; set; }
 
         //Skapar en metod för att visa inkomster i textform
