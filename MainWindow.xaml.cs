@@ -8,6 +8,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WpfBudgetplanerare.Models;
+using WpfBudgetplanerare.ViewModels;
 
 namespace WpfBudgetplanerare
 {
@@ -16,9 +18,26 @@ namespace WpfBudgetplanerare
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MainViewModel viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
+            viewModel = new MainViewModel();
+            DataContext = viewModel;
+            Loaded += MainWindow_Loaded;
+
         }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await viewModel.LoadAsync();
+        }
+
+        //Click event för att lägga till en inkomst. Logik ligger i ViewModel
+        //private void AddIncome(object sender, RoutedEventArgs e)
+        //{
+        //    viewModel.AddIncome();
+        //}
     }
 }

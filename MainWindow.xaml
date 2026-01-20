@@ -3,10 +3,163 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WpfBudgetplanerare"
+        xmlns:local="clr-namespace:WpfBudgetplanerare" xmlns:viewmodels="clr-namespace:WpfBudgetplanerare.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:MainViewModel}"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <TabControl>
+        <TabItem Header="Inkomster">
+            <Grid Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-    </Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <ListView
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    ItemsSource="{Binding Incomes}"
+                    SelectedItem="{Binding SelectedIncome, Mode=TwoWay}"
+                    DisplayMemberPath="Amount">
+
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Belopp" DisplayMemberBinding="{Binding Amount}" />
+                            <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Category.Name}" />
+                            <GridViewColumn Header="Datum" DisplayMemberBinding="{Binding ReceivedDate}" />
+                            <GridViewColumn Header="Återkommande" DisplayMemberBinding="{Binding IsRecurring}" />
+                        </GridView>
+                    </ListView.View>
+                    
+                </ListView>
+
+                <StackPanel Grid.Row="0" Grid.Column="1" Margin="16" VerticalAlignment="Top">
+                    <TextBlock Text="Belopp:" FontWeight="Bold"/>
+                    <TextBox Text="{Binding Path=SelectedIncome.Amount, Mode=TwoWay}"></TextBox>
+
+                    <TextBlock Text="Kategori" FontWeight="Bold"/>
+                    <ComboBox ItemsSource="{Binding Categories}" 
+                        SelectedValue="{Binding Path=SelectedIncome.Category.Id, Mode=TwoWay}"
+                        DisplayMemberPath="Name" Margin="0,0,0,8"
+                        SelectedValuePath="Id"></ComboBox>
+
+                    <TextBlock Text="Datum" FontWeight="Bold"/>
+                    <DatePicker Text="{Binding Path=SelectedIncome.ReceivedDate, Mode=TwoWay}"/>
+                    <!--<TextBox Text="{Binding Path=SelectedIncome.ReceivedDate, Mode=TwoWay}"></TextBox>-->
+
+                    <TextBlock Text="Återkommande" FontWeight="Bold"/>
+                    <CheckBox IsChecked="{Binding Path=SelectedIncome.IsRecurring, Mode=TwoWay}"></CheckBox>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                    <Button Content="Lägg till" Background="Green" Foreground="White" Command="{Binding AddIncomeCommand}" Margin="4" Padding="8"></Button>
+                    <Button Content="Ta bort" Background="DarkRed" Foreground="White" Command="{Binding RemoveIncomeCommand}" Margin="4" Padding="8"></Button>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+        
+        <!--Fliken för utgifter-->
+        
+        <TabItem Header="Utgifter" Height="20" VerticalAlignment="Top">
+            <Grid Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <ListView Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"
+                    ItemsSource="{Binding Expenses}"
+                    SelectedItem="{Binding SelectedExpense, Mode=TwoWay}"
+                    DisplayMemberPath="Amount">
+
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Belopp" DisplayMemberBinding="{Binding Amount}" />
+                            <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Category.Name}" />
+                            <GridViewColumn Header="Datum" DisplayMemberBinding="{Binding ExpenseDate}" />
+                            <GridViewColumn Header="Återkommande" DisplayMemberBinding="{Binding IsRecurring}" />
+                        </GridView>
+                    </ListView.View>
+                    
+                </ListView>
+
+                <StackPanel Grid.Row="0" Grid.Column="1" Margin="16" VerticalAlignment="Top">
+                    <TextBlock Text="Belopp" FontWeight="Bold"></TextBlock>
+                    <TextBox Text="{Binding Path=SelectedExpense.Amount, Mode=TwoWay}"></TextBox>
+
+                    <TextBlock Text="Kategori" FontWeight="Bold"></TextBlock>
+                    <ComboBox ItemsSource="{Binding Categories}"
+                              SelectedValue="{Binding Path=SelectedExpense.Category.Id, Mode=TwoWay}"
+                              DisplayMemberPath="Name" Margin="0,0,0,8"
+                              SelectedValuePath="Id"></ComboBox>
+
+                    <TextBlock Text="Datum" FontWeight="Bold"></TextBlock>
+                    <DatePicker Text="{Binding Path=SelectedExpense.ExpenseDate, Mode=TwoWay}"/>
+
+                    <TextBlock Text="Återkommande" FontWeight="Bold"></TextBlock>
+                    <CheckBox IsChecked="{Binding Path=SelectedExpense.IsRecurring, Mode=TwoWay}"></CheckBox>
+                    
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                    <Button Content="Lägg till" Background="Green" Foreground="White" Command="{Binding AddExpenseCommand}" Padding="8" Margin="4"></Button>
+                    <Button Content="Ta bort" Background="DarkRed" Foreground="White" Command="{Binding RemoveExpenseCommand}" Padding="8" Margin="4"></Button>
+                </StackPanel>
+                
+            </Grid>
+        </TabItem>
+        
+        
+        <TabItem Header="Prognos">
+            <Grid Margin="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- Rubrik -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Prognos-box -->
+                    <RowDefinition Height="*"/>
+                    <!-- Lista -->
+                </Grid.RowDefinitions>
+
+                <!-- 1️⃣ Rubrik -->
+                <TextBlock Grid.Row="0" Text="Månadsprognos"
+                   FontSize="24" FontWeight="Bold"
+                   Margin="0,0,0,16"/>
+
+                <!-- 2️⃣ Prognos-box -->
+                <Border Grid.Row="1" Background="#FFECECEC" CornerRadius="8"
+                Padding="16" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="{Binding TotalIncome, StringFormat=Total inkomst: {0:C0}, ConverterCulture=sv-SE}" FontSize="16"/>
+                        <TextBlock Text="{Binding TotalExpense, StringFormat=Totala utgifter: {0:C0}, ConverterCulture=sv-SE}" FontSize="16"/>
+                        <TextBlock Text="{Binding MonthlyBalance, StringFormat=Prognos: {0:C0}, ConverterCulture=sv-SE}" 
+                           FontSize="18" FontWeight="Bold"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 3️⃣ Lista över återkommande transaktioner -->
+                <ListView Grid.Row="2" ItemsSource="{Binding RecurringTransactions}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Typ" DisplayMemberBinding="{Binding Type}" Width="100"/>
+                            <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Category.Name}" Width="150"/>
+                            <GridViewColumn Header="Belopp" DisplayMemberBinding="{Binding Amount}" Width="100"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Grid>
+
+        </TabItem>
+
+    </TabControl>
+
 </Window>
