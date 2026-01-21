@@ -51,13 +51,13 @@ namespace WpfBudgetplanerare.ViewModels
 
         public MainViewModel() 
         {
-            Incomes.Add(new Income { Amount = 5000, Category = new Category { Id = 1, Name = "Lön", Description = "Månadslön" }, RecurrenceType = Recurrence.Monthly, ReceivedDate = DateTime.Now });
-            Incomes.Add(new Income { Amount = 200, Category = new Category { Id = 2, Name = "Gåva", Description = "Födelsedagspresent" }, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
-            Incomes.Add(new Income { Amount = 150, Category = new Category { Id = 3, Name = "Sälj", Description = "Sålde gamla möbler" }, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
+            Incomes.Add(new Income { Amount = 5000, Category = new Category { Id = 1, Name = "Lön"}, RecurrenceType = Recurrence.Monthly, ReceivedDate = DateTime.Now });
+            Incomes.Add(new Income { Amount = 200, Category = new Category { Id = 2, Name = "Gåva"}, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
+            Incomes.Add(new Income { Amount = 150, Category = new Category { Id = 3, Name = "Sälj"}, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
 
-            Expenses.Add(new Expense { Amount = 3000, Category = new Category { Id = 1, Name = "Hyra", Description = "Månadshyra" }, RecurrenceType = Recurrence.Monthly, ExpenseDate = DateTime.Now });
-            Expenses.Add(new Expense { Amount = 500, Category = new Category { Id = 2, Name = "Mat", Description = "Veckohandling" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
-            Expenses.Add(new Expense { Amount = 200, Category = new Category { Id = 3, Name = "Transport", Description = "Busskort" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
+            Expenses.Add(new Expense { Amount = 3000, Category = new Category { Id = 1, Name = "Hyra"}, RecurrenceType = Recurrence.Monthly, ExpenseDate = DateTime.Now });
+            Expenses.Add(new Expense { Amount = 500, Category = new Category { Id = 2, Name = "Mat"}, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
+            Expenses.Add(new Expense { Amount = 200, Category = new Category { Id = 3, Name = "Transport"}, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
 
             CalculateTotalIncomePerMonth(SelectedMonth);
             CalculateTotalExpensePerMonth(SelectedMonth);
@@ -87,7 +87,7 @@ namespace WpfBudgetplanerare.ViewModels
         //Metod med logik för att lägga till en inkomst som kallas på från View vid click event
         private void AddIncome(object? parameter)
         {
-            Income income = new Income { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori", Description = "" }, RecurrenceType = Recurrence.OneTime, ReceivedDate = System.DateTime.Now };
+            Income income = new Income { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori"}, RecurrenceType = Recurrence.OneTime, ReceivedDate = System.DateTime.Now };
             Incomes.Add(income);
             SelectedIncome = income;
             CalculateTotalIncomePerMonth(SelectedMonth);
@@ -123,7 +123,7 @@ namespace WpfBudgetplanerare.ViewModels
 
         public void AddExpense(object? parameter)
         {
-            Expense expense = new Expense { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori", Description = "" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = System.DateTime.Now };
+            Expense expense = new Expense { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = System.DateTime.Now };
             Expenses.Add(expense);
             SelectedExpense = expense;
             CalculateTotalExpensePerMonth(SelectedMonth);
@@ -147,15 +147,17 @@ namespace WpfBudgetplanerare.ViewModels
 
         public ObservableCollection<Category> Categories { get; set; } = new ObservableCollection<Category>()
         {
-            new Category { Id = 1, Name = "Lön", Description = "Månadslön" },
-            new Category { Id = 2, Name = "Gåva", Description = "Födelsedagspresent" },
-            new Category { Id = 3, Name = "Sälj", Description = "Sålde gamla möbler" },
-            new Category { Id = 4, Name = "Hyra", Description = "Månadshyra" },
-            new Category { Id = 5, Name = "Mat", Description = "Veckohandling" },
-            new Category { Id = 6, Name = "Transport", Description = "Busskort" }
+            new Category { Id = 1, Name = "Lön"},
+            new Category { Id = 2, Name = "Gåva"},
+            new Category { Id = 3, Name = "Sälj"},
+            new Category { Id = 4, Name = "Hyra"},
+            new Category { Id = 5, Name = "Mat"},
+            new Category { Id = 6, Name = "Transport"}
         };
 
         //PROGNOS
+
+        public Array RecurrenceTypes => Enum.GetValues(typeof(Recurrence)); //Hämtar alla värden från enum Recurrence för att binda till ComboBox i View
 
         private decimal totalIncome;
         public decimal TotalIncome {get => totalIncome;
@@ -198,15 +200,18 @@ namespace WpfBudgetplanerare.ViewModels
                         }
                         break;
                     case Recurrence.Monthly:
-                        if (income.ReceivedDate <= new DateTime(month.Year, month.Month, 1))
+                        var startMonth = new DateTime(income.ReceivedDate.Year, income.ReceivedDate.Month, 1);
+                        var selectedMonth = new DateTime(month.Year, month.Month, 1);
+
+                        if (startMonth <= selectedMonth)
                         {
                             TotalIncome += income.Amount;
                         }
                         break;
                     case Recurrence.Yearly:
-                        if (income.ReceivedDate.Month == month.Month && income.ReceivedDate.Year <= month.Year)
+                        if (income.ReceivedDate <= new DateTime(month.Year, month.Month, 1))
                         {
-                            TotalIncome += income.Amount;
+                            TotalIncome += income.Amount / 12m; //12m för att få månadsbelopp i typen decimal
                         }
                         break;
                 }
@@ -230,7 +235,10 @@ namespace WpfBudgetplanerare.ViewModels
                         }
                         break;
                     case Recurrence.Monthly:
-                        if (expense.ExpenseDate <= new DateTime(month.Year, month.Month, 1))
+                        var startMonth = new DateTime(expense.ExpenseDate.Year, expense.ExpenseDate.Month, 1);
+                        var selectedMonth = new DateTime(month.Year, month.Month, 1);
+
+                        if (startMonth <= selectedMonth)
                         {
                             TotalExpense += expense.Amount;
                         }
