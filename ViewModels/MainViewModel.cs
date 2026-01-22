@@ -1,5 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+using System.Collections.ObjectModel;
 using WpfBudgetplanerare.Command;
+using WpfBudgetplanerare.Data;
 using WpfBudgetplanerare.Models;
 using WpfBudgetplanerare.Models.Enums;
 
@@ -35,8 +38,8 @@ namespace WpfBudgetplanerare.ViewModels
         public DateTime SelectedMonth
         {
             get { return selectedMonth; }
-            set 
-            { 
+            set
+            {
                 selectedMonth = value;
                 RaisePropertyChanged(nameof(SelectedMonth));
 
@@ -49,15 +52,8 @@ namespace WpfBudgetplanerare.ViewModels
         public DelegateCommand AddIncomeCommand { get; }
         public DelegateCommand RemoveIncomeCommand { get; }
 
-        public MainViewModel() 
+        public MainViewModel()
         {
-            Incomes.Add(new Income { Amount = 5000, Category = new Category { Id = 1, Name = "Lön"}, RecurrenceType = Recurrence.Monthly, ReceivedDate = DateTime.Now });
-            Incomes.Add(new Income { Amount = 200, Category = new Category { Id = 2, Name = "Gåva"}, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
-            Incomes.Add(new Income { Amount = 150, Category = new Category { Id = 3, Name = "Sälj"}, RecurrenceType = Recurrence.OneTime, ReceivedDate = DateTime.Now });
-
-            Expenses.Add(new Expense { Amount = 3000, Category = new Category { Id = 1, Name = "Hyra"}, RecurrenceType = Recurrence.Monthly, ExpenseDate = DateTime.Now });
-            Expenses.Add(new Expense { Amount = 500, Category = new Category { Id = 2, Name = "Mat"}, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
-            Expenses.Add(new Expense { Amount = 200, Category = new Category { Id = 3, Name = "Transport"}, RecurrenceType = Recurrence.OneTime, ExpenseDate = DateTime.Now });
 
             CalculateTotalIncomePerMonth(SelectedMonth);
             CalculateTotalExpensePerMonth(SelectedMonth);
@@ -71,7 +67,7 @@ namespace WpfBudgetplanerare.ViewModels
         }
 
         private bool CanRemove(object parameter) => SelectedIncome is not null;
-        
+
 
         private void RemoveIncome(object? paramenter)
         {
@@ -87,15 +83,13 @@ namespace WpfBudgetplanerare.ViewModels
         //Metod med logik för att lägga till en inkomst som kallas på från View vid click event
         private void AddIncome(object? parameter)
         {
-            Income income = new Income { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori"}, RecurrenceType = Recurrence.OneTime, ReceivedDate = System.DateTime.Now };
+            Income income = new Income { Amount = 0, Category = new Category { CategoryId = 0, Name = "Ny Kategori" }, RecurrenceType = Recurrence.OneTime, ReceivedDate = System.DateTime.Now };
             Incomes.Add(income);
             SelectedIncome = income;
             CalculateTotalIncomePerMonth(SelectedMonth);
             CalculateMonthlyBalance(SelectedMonth);
 
         }
-
-
 
         //EXPENSES
         private ObservableCollection<Expense> expenses = new();
@@ -106,7 +100,7 @@ namespace WpfBudgetplanerare.ViewModels
         {
             get { return expenses; }
             set { expenses = value;
-            RaisePropertyChanged(nameof(Expenses));
+                RaisePropertyChanged(nameof(Expenses));
             }
         }
 
@@ -123,7 +117,7 @@ namespace WpfBudgetplanerare.ViewModels
 
         public void AddExpense(object? parameter)
         {
-            Expense expense = new Expense { Amount = 0, Category = new Category { Id = 0, Name = "Ny Kategori" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = System.DateTime.Now };
+            Expense expense = new Expense { Amount = 0, Category = new Category { CategoryId = 0, Name = "Ny Kategori" }, RecurrenceType = Recurrence.OneTime, ExpenseDate = System.DateTime.Now };
             Expenses.Add(expense);
             SelectedExpense = expense;
             CalculateTotalExpensePerMonth(SelectedMonth);
@@ -145,44 +139,46 @@ namespace WpfBudgetplanerare.ViewModels
 
         //CATEGORIES
 
-        public ObservableCollection<Category> Categories { get; set; } = new ObservableCollection<Category>()
+        private ObservableCollection<Category> categories = new ObservableCollection<Category>();
+        public ObservableCollection<Category> Categories
         {
-            new Category { Id = 1, Name = "Lön"},
-            new Category { Id = 2, Name = "Gåva"},
-            new Category { Id = 3, Name = "Sälj"},
-            new Category { Id = 4, Name = "Hyra"},
-            new Category { Id = 5, Name = "Mat"},
-            new Category { Id = 6, Name = "Transport"}
-        };
+            get => categories;
+            set
+            {
+                categories = value;
+                RaisePropertyChanged(nameof(Categories));
+            }
+
+        }
 
         //PROGNOS
 
         public Array RecurrenceTypes => Enum.GetValues(typeof(Recurrence)); //Hämtar alla värden från enum Recurrence för att binda till ComboBox i View
 
         private decimal totalIncome;
-        public decimal TotalIncome {get => totalIncome;
-            set 
+        public decimal TotalIncome { get => totalIncome;
+            set
             {
                 totalIncome = value;
                 RaisePropertyChanged(nameof(TotalIncome));
             }
         }
         private decimal totalExpense;
-        public decimal TotalExpense {get => totalExpense;
-            set 
-            { 
+        public decimal TotalExpense { get => totalExpense;
+            set
+            {
                 totalExpense = value;
                 RaisePropertyChanged(nameof(TotalExpense));
             }
         }
 
         private decimal monthlyBalance;
-        public decimal MonthlyBalance {get => monthlyBalance;
-            set 
+        public decimal MonthlyBalance { get => monthlyBalance;
+            set
             {
                 monthlyBalance = value;
                 RaisePropertyChanged(nameof(MonthlyBalance));
-            } 
+            }
         }
 
         public void CalculateTotalIncomePerMonth(DateTime month)
@@ -265,14 +261,32 @@ namespace WpfBudgetplanerare.ViewModels
 
 
 
+        //Metod för att ladda data asynkront från databasen vid uppstart av applikationen
         public async Task LoadAsync()
         {
-            if (Incomes.Any())
+            using var context = new BudgetDbContext(); //Skapar en instans av DbContext för att interagera med databasen. Använder using för att objektet ska tas bort automatiskt efter användning.
+
+            var categoriesFromDb = await context.Categories.ToListAsync();
+            Categories.Clear(); //Rensar befintliga kategorier för att undvika dubbletter vid omladdning
+            foreach (var category in categoriesFromDb)
             {
-                return;
+                Categories.Add(category);
             }
 
+            var incomesFromDb = await context.Incomes.Include(i => i.Category).ToListAsync(); //Inkluderar relaterade Category-objekt
+            //Incomes.Clear();
+            foreach (var income in incomesFromDb)
+            {
+                Incomes.Add(income);
+            }
 
-        }
+            var expensesFromDb = await context.Expenses.Include(e => e.Category).ToListAsync(); //Inkluderar relaterade Category-objekt
+            //Expenses.Clear();
+            foreach (var expense in expensesFromDb)
+            {
+                Expenses.Add(expense);
+
+            }
+        }   
     }
 }
