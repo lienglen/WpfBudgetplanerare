@@ -24,7 +24,6 @@ namespace WpfBudgetplanerare.ViewModels
         }
 
         private Income selectedIncome;
-
         public Income SelectedIncome
         {
             get { return selectedIncome; }
@@ -125,6 +124,7 @@ namespace WpfBudgetplanerare.ViewModels
             AddExpenseCommand = new DelegateCommand(AddExpense);
             RemoveExpenseCommand = new DelegateCommand(RemoveExpense, CanRemoveExpense);
 
+            //Initiera NewIncome och NewExpense för att undvika null-referenser i UI:t
             NewIncome = new Income { ReceivedDate = DateTime.Now };
             NewExpense = new Expense { ExpenseDate = DateTime.Now };
         }
