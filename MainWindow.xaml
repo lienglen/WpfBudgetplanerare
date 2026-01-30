@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <TabControl>
-        <TabItem Header="Inkomster">
+        <TabItem Header="Incomes">
             <Grid Margin="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
@@ -28,44 +28,45 @@
 
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Belopp" DisplayMemberBinding="{Binding Amount}" />
-                            <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Category.Name}" />
-                            <GridViewColumn Header="Datum" DisplayMemberBinding="{Binding ReceivedDate}" />
-                            <GridViewColumn Header="Återkommande" DisplayMemberBinding="{Binding RecurrenceType}" />
+                            <GridViewColumn Header="Amount" DisplayMemberBinding="{Binding Amount}" />
+                            <GridViewColumn Header="Category" DisplayMemberBinding="{Binding Category.Name}" />
+                            <GridViewColumn Header="Date" DisplayMemberBinding="{Binding ReceivedDate}" />
+                            <GridViewColumn Header="Recurrence" DisplayMemberBinding="{Binding RecurrenceType}" />
                         </GridView>
                     </ListView.View>
                     
                 </ListView>
 
                 <StackPanel Grid.Row="0" Grid.Column="1" Margin="16" VerticalAlignment="Top">
-                    <TextBlock Text="Belopp:" FontWeight="Bold"/>
-                    <TextBox Text="{Binding Path=SelectedIncome.Amount, Mode=TwoWay}"></TextBox>
+                    
+                    <TextBlock Text="Amount" FontWeight="Bold"/>
+                    <TextBox Text="{Binding Path=NewIncome.Amount, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"></TextBox>
 
-                    <TextBlock Text="Kategori" FontWeight="Bold"/>
+                    <TextBlock Text="Category" FontWeight="Bold"/>
                     <ComboBox ItemsSource="{Binding Categories}" 
-                        SelectedValue="{Binding Path=SelectedIncome.Category, Mode=TwoWay}"
+                        SelectedValue="{Binding Path=NewIncome.Category, Mode=TwoWay}"
                         DisplayMemberPath="Name" Margin="0,0,0,8"
                         ></ComboBox>
 
-                    <TextBlock Text="Datum" FontWeight="Bold"/>
-                    <DatePicker Text="{Binding Path=SelectedIncome.ReceivedDate, Mode=TwoWay}"/>
-                    <!--<TextBox Text="{Binding Path=SelectedIncome.ReceivedDate, Mode=TwoWay}"></TextBox>-->
+                    <TextBlock Text="Date" FontWeight="Bold"/>
+                    <DatePicker Text="{Binding Path=NewIncome.ReceivedDate, Mode=TwoWay}"/>
+                    
 
-                    <TextBlock Text="Återkommande" FontWeight="Bold"/>
+                    <TextBlock Text="Recurrence" FontWeight="Bold"/>
                     <ComboBox ItemsSource="{Binding RecurrenceTypes}"
-                              SelectedValue="{Binding SelectedIncome.RecurrenceType, Mode=TwoWay}"></ComboBox>
+                              SelectedValue="{Binding NewIncome.RecurrenceType, Mode=TwoWay}"></ComboBox>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-                    <Button Content="Lägg till" Background="Green" Foreground="White" Command="{Binding AddIncomeCommand}" Margin="4" Padding="8"></Button>
-                    <Button Content="Ta bort" Background="DarkRed" Foreground="White" Command="{Binding RemoveIncomeCommand}" Margin="4" Padding="8"></Button>
+                    <Button Content="Add" Background="Green" Foreground="White" Command="{Binding AddIncomeCommand}" Margin="4" Padding="8"></Button>
+                    <Button Content="Delete" Background="DarkRed" Foreground="White" Command="{Binding RemoveIncomeCommand}" Margin="4" Padding="8"></Button>
                 </StackPanel>
             </Grid>
         </TabItem>
         
         <!--Fliken för utgifter-->
         
-        <TabItem Header="Utgifter" Height="20" VerticalAlignment="Top">
+        <TabItem Header="Expenses" Height="20" VerticalAlignment="Top">
             <Grid Margin="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
@@ -77,44 +78,44 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <ListView Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2"
+                <ListView Grid.Column="0" Grid.Row="0"
                     ItemsSource="{Binding Expenses}"
                     SelectedItem="{Binding SelectedExpense, Mode=TwoWay}"
                     DisplayMemberPath="Amount">
 
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Belopp" DisplayMemberBinding="{Binding Amount}" />
-                            <GridViewColumn Header="Kategori" DisplayMemberBinding="{Binding Category.Name}" />
-                            <GridViewColumn Header="Datum" DisplayMemberBinding="{Binding ExpenseDate}" />
-                            <GridViewColumn Header="Återkommande" DisplayMemberBinding="{Binding RecurrenceType}" />
+                            <GridViewColumn Header="Amount" DisplayMemberBinding="{Binding Amount}" />
+                            <GridViewColumn Header="Category" DisplayMemberBinding="{Binding Category.Name}" />
+                            <GridViewColumn Header="Date" DisplayMemberBinding="{Binding ExpenseDate}" />
+                            <GridViewColumn Header="Recurrence" DisplayMemberBinding="{Binding RecurrenceType}" />
                         </GridView>
                     </ListView.View>
                     
                 </ListView>
 
                 <StackPanel Grid.Row="0" Grid.Column="1" Margin="16" VerticalAlignment="Top">
-                    <TextBlock Text="Belopp" FontWeight="Bold"></TextBlock>
-                    <TextBox Text="{Binding Path=SelectedExpense.Amount, Mode=TwoWay}"></TextBox>
+                    <TextBlock Text="Amount" FontWeight="Bold"></TextBlock>
+                    <TextBox Text="{Binding Path=NewExpense.Amount, Mode=TwoWay}"></TextBox>
 
-                    <TextBlock Text="Kategori" FontWeight="Bold"></TextBlock>
+                    <TextBlock Text="Category" FontWeight="Bold"></TextBlock>
                     <ComboBox ItemsSource="{Binding Categories}"
-                              SelectedValue="{Binding Path=SelectedExpense.Category, Mode=TwoWay}"
+                              SelectedValue="{Binding Path=NewExpense.Category, Mode=TwoWay}"
                               DisplayMemberPath="Name" Margin="0,0,0,8"
                               ></ComboBox>
 
-                    <TextBlock Text="Datum" FontWeight="Bold"></TextBlock>
-                    <DatePicker Text="{Binding Path=SelectedExpense.ExpenseDate, Mode=TwoWay}"/>
+                    <TextBlock Text="Date" FontWeight="Bold"></TextBlock>
+                    <DatePicker Text="{Binding Path=NewExpense.ExpenseDate, Mode=TwoWay}"/>
 
-                    <TextBlock Text="Återkommande" FontWeight="Bold"></TextBlock>
+                    <TextBlock Text="Recurrence" FontWeight="Bold"></TextBlock>
                     <ComboBox ItemsSource="{Binding RecurrenceTypes}"
-                              SelectedItem="{Binding SelectedExpense.RecurrenceType, Mode=TwoWay}"></ComboBox>
+                              SelectedItem="{Binding NewExpense.RecurrenceType, Mode=TwoWay}"></ComboBox>
                     
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Grid.ColumnSpan="2" Margin="0,8,0,0">
-                    <Button Content="Lägg till" Background="Green" Foreground="White" Command="{Binding AddExpenseCommand}" Padding="8" Margin="4"></Button>
-                    <Button Content="Ta bort" Background="DarkRed" Foreground="White" Command="{Binding RemoveExpenseCommand}" Padding="8" Margin="4"></Button>
+                    <Button Content="Add" Background="Green" Foreground="White" Command="{Binding AddExpenseCommand}" Padding="8" Margin="4"></Button>
+                    <Button Content="Delete" Background="DarkRed" Foreground="White" Command="{Binding RemoveExpenseCommand}" Padding="8" Margin="4"></Button>
                 </StackPanel>
                 
             </Grid>
@@ -133,15 +134,28 @@
                 </Grid.RowDefinitions>
 
                 <!-- 1️⃣ Rubrik -->
-                <TextBlock Grid.Row="0" Text="Månadsprognos"
+                <TextBlock Grid.Row="0" Text="Monthly forecast"
                    FontSize="24" FontWeight="Bold"
                    Margin="0,0,0,16"/>
                 <DatePicker Grid.Row="0" HorizontalAlignment="Right"
                             SelectedDate="{Binding SelectedMonth}"
                             Margin="0,0,0,16"/>
 
+                
                 <!-- 2️⃣ Prognos-box -->
-                <Border Grid.Row="1" Background="#FFECECEC" CornerRadius="8"
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,16" Grid.Row="1">
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="Annual Salary:" FontWeight="Bold" FontSize="12"/>
+                        <TextBox Text="{Binding AnnualSalary, UpdateSourceTrigger=PropertyChanged}" Width="120"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="Annual Work Hours (h):" FontWeight="Bold" FontSize="12"/>
+                        <TextBox Text="{Binding AnnualWorkHours, UpdateSourceTrigger=PropertyChanged}" Width="135"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Grid.Row="2" Background="#FFECECEC" CornerRadius="8"
                 Padding="16" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="{Binding TotalIncome, StringFormat=Total inkomst: {0:C0}, ConverterCulture=sv-SE}" FontSize="16"/>

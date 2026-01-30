@@ -34,10 +34,6 @@ namespace WpfBudgetplanerare
             await viewModel.LoadAsync();
         }
 
-        //Click event för att lägga till en inkomst. Logik ligger i ViewModel
-        //private void AddIncome(object sender, RoutedEventArgs e)
-        //{
-        //    viewModel.AddIncome();
-        //}
+       
     }
 }
