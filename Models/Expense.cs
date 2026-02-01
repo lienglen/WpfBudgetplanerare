@@ -16,6 +16,7 @@ namespace WpfBudgetplanerare.Models
         public DateTime ExpenseDate { get; set; }
 
         public int CategoryId { get; set; } // För att EF ska fatta relationen
+
         //Måste implementera INotifyPropertyChanged för att kunna uppdatera UI när Category ändras
         private Category _category;
         public Category Category { get => _category;

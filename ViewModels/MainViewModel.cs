@@ -45,10 +45,13 @@ namespace WpfBudgetplanerare.ViewModels
             }
         }
 
-        //Property för att bilda kommandot för att lägga till en inkomst
+        //Property för att bilda kommandot för att lägga till en inkomst i View
         public DelegateCommand AddIncomeCommand { get; }
+
+        //Commando för att ta bort inkomst
         public DelegateCommand RemoveIncomeCommand { get; }
 
+        //Aktiverar/inaktiverar ta bort-knappen
         private bool CanRemove(object parameter) => SelectedIncome is not null;
 
 
@@ -170,6 +173,7 @@ namespace WpfBudgetplanerare.ViewModels
 
         public void AddExpense(object? parameter)
         {
+            //Lägger till en new expense
             Expense expenseToAddToList = new Expense { Amount = NewExpense.Amount, Category = NewExpense.Category, RecurrenceType = NewExpense.RecurrenceType, ExpenseDate = NewExpense.ExpenseDate};
 
             //Spara till databasen
@@ -191,6 +195,7 @@ namespace WpfBudgetplanerare.ViewModels
             CalculateMonthlyBalance(SelectedMonth);
         }
 
+        //Aktiverar/inaktiverar knappen för att ta bort en post, beronde på true eller false
         private bool CanRemoveExpense(object parameter) => SelectedExpense is not null;
 
 
@@ -203,7 +208,7 @@ namespace WpfBudgetplanerare.ViewModels
                 //Tar bort från databasen
                 using (var context = new BudgetDbContext())
                 {
-                    context.Expenses.Attach(SelectedExpense);
+                    context.Expenses.Attach(SelectedExpense); //Använder Attach för att inte få dubletter med kategorierna
                     context.Expenses.Remove(SelectedExpense);
                     context.SaveChanges();
                 }
@@ -236,7 +241,7 @@ namespace WpfBudgetplanerare.ViewModels
         #region prognos
         //PROGNOS
 
-        public Array RecurrenceTypes => Enum.GetValues(typeof(Recurrence)); //Hämtar alla värden från enum Recurrence för att binda till ComboBox i View
+        public Array RecurrenceTypes => Enum.GetValues(typeof(Recurrence)); //Hämtar alla värden från enum Recurrence för att kunna binda till ComboBox i View
 
         private decimal totalIncome;
         public decimal TotalIncome { get => totalIncome;
@@ -264,6 +269,7 @@ namespace WpfBudgetplanerare.ViewModels
             }
         }
 
+        
         private decimal annualSalary;
         public decimal AnnualSalary
         {
@@ -304,35 +310,50 @@ namespace WpfBudgetplanerare.ViewModels
             }
         }
 
+        //Metod för att räkna ut totala inkomster per månad baserat på inkomstlistan och den valda månaden
         public void CalculateTotalIncomePerMonth(DateTime month)
         {
-            decimal monthlySalary = 0;
-            if (AnnualWorkHours > 0)
+            //Börjar med att räkna ut månadslön baserat på årslön och arbetstimmar
+            decimal monthlySalary = 0;//Initialiserar månadslön till 0 för att undvika fel vid beräkning om ingen lön är angiven
+            if (AnnualWorkHours > 0) //Kontrollerar att arbetstimmar är större än 0 för att undvika division med 0
             {
+                //Beräknar timlön och sedan månadslön
                 decimal hourlyRate = AnnualSalary / AnnualWorkHours;
-                monthlySalary = hourlyRate * (AnnualWorkHours / 12m);
+                monthlySalary = hourlyRate * (AnnualWorkHours / 12m); //12m för att få månadsbelopp i typen decimal
             }
 
+
+            //Startar totalinkomsten med månadslönen
             TotalIncome = monthlySalary;
 
+            //Lägger till inkomster från inkomstlistan baserat på deras återkommande typ
             foreach (var income in Incomes)
             {
+                //Kollar vilken typ av återkommande inkomst det är och lägger till beloppet om det gäller för den valda månaden
                 switch (income.RecurrenceType)
                 {
+                    //OneTime: Läggs till endast om mottagningsdatumet är i den valda månaden och året
                     case Recurrence.OneTime:
                         if (income.ReceivedDate.Month == month.Month && income.ReceivedDate.Year == month.Year)
                         {
+                            //Lägger till engångsbeloppet
                             TotalIncome += income.Amount;
                         }
                         break;
+                    //Monthly: Läggs till om mottagningsdatumet är tidigare än eller lika med den valda månaden
                     case Recurrence.Monthly:
-                        
+
+                        //Jämförar år och månad genom att skapa nya DateTime-objekt för att undvika problem med dagar
                         if (new DateTime(income.ReceivedDate.Year, income.ReceivedDate.Month, 1) <= new DateTime(month.Year, month.Month, 1))
                         {
+                            //Lägger till månatligt belopp
                             TotalIncome += income.Amount;
                         }
                         break;
+
+                    //Yearly: Läggs till om mottagningsdatumets år är tidigare än eller lika med det valda året
                     case Recurrence.Yearly:
+                        //Kontrollerar att månaden också matchar för att säkerställa att det bara läggs till en gång per år
                         if (income.ReceivedDate <= new DateTime(month.Year, month.Month, 1))
                         {
                             TotalIncome += income.Amount / 12m; //12m för att få månadsbelopp i typen decimal
@@ -341,29 +362,38 @@ namespace WpfBudgetplanerare.ViewModels
                 }
 
             }
-
+            //Notifierar att TotalIncome har ändrats för att uppdatera UI:t
             RaisePropertyChanged(nameof(TotalIncome));
         }
 
+        //Metod för att räkna ut totala utgifter per månad baserat på utgiftslistan och den valda månaden
         public void CalculateTotalExpensePerMonth(DateTime month)
         {
+            //Startar totalutgiften på 0
             TotalExpense = 0;
+
+            //Lägger till utgifter från utgiftslistan baserat på deras återkommande typ
             foreach (var expense in Expenses)
             {
+                //
                 switch (expense.RecurrenceType)
                 {
+                    //OneTime: Läggs till endast om utgiftsdatumet är i den valda månaden och året
                     case Recurrence.OneTime:
                         if (expense.ExpenseDate.Month == month.Month && expense.ExpenseDate.Year == month.Year)
                         {
                             TotalExpense += expense.Amount;
                         }
                         break;
+
+                    //Monthly: Läggs till om utgiftsdatumet är tidigare än eller lika med den valda månaden
                     case Recurrence.Monthly:
                         if (new DateTime(expense.ExpenseDate.Year, expense.ExpenseDate.Month, 1) <= new DateTime(month.Year, month.Month, 1))
                         {
                             TotalExpense += expense.Amount;
                         }
                         break;
+                    //Yearly: Läggs till om utgiftsdatumets år är tidigare än eller lika med det valda året och månaderna matchar
                     case Recurrence.Yearly:
                         if (expense.ExpenseDate.Month == month.Month && expense.ExpenseDate.Year <= month.Year)
                         {
@@ -372,10 +402,11 @@ namespace WpfBudgetplanerare.ViewModels
                         break;
                 }
             }
-
+            //Notifierar att total exepnse har förändrats
             RaisePropertyChanged(nameof(TotalExpense));
         }
 
+        //Metod för att räkna ut månadens balans genom att subtrahera totala utgifter från totala inkomster
         public void CalculateMonthlyBalance(DateTime month)
         {
             CalculateTotalIncomePerMonth(month);
@@ -398,12 +429,14 @@ namespace WpfBudgetplanerare.ViewModels
                 Categories.Add(category);
             }
 
+            //Hämtar listan med inkomster från databasen
             var incomesFromDb = await context.Incomes.Include(i => i.Category).ToListAsync(); //Inkluderar relaterade Category-objekt
             foreach (var income in incomesFromDb)
             {
                 Incomes.Add(income);
             }
 
+            //Hämtar listan med utgifter från databasen
             var expensesFromDb = await context.Expenses.Include(e => e.Category).ToListAsync(); //Inkluderar relaterade Category-objekt
             foreach (var expense in expensesFromDb)
             {

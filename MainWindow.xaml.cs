@@ -29,6 +29,7 @@ namespace WpfBudgetplanerare
 
         }
 
+        //Laddar data asynkront när fönstret är laddat
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             await viewModel.LoadAsync();
